@@ -16,7 +16,7 @@ extern "C" {
 #define SLEEP_MODE_ON true                        /* To pass into sleep mode if true      */
 #define NOT_READ_EEPROM false                     /* Dont't read from EEPROM if true      */
 
-#define SD_PIN D8                                 /* microSD use D8 for Wemos D1 Mini     */
+#define SD_PIN D4                                 /* microSD use D4 for Wemos D1 Mini     */
 #define HOT_PIN D1                                /* Pin of hot water                     */
 #define COLD_PIN D2                               /* Pin of cold water                    */
 #define EXT_POWER_PIN D0                          /* Pin of monitoring external power     */

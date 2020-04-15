@@ -3,7 +3,7 @@ The water counter on ESP8266 for Arduino IDE
 
 
 # Software.
-You need to use mosquitto server, mqttwarn, perl and sqlite3.
+You may use an MQTT server to integrate into a home automation software.
 
 
 # Hardware.

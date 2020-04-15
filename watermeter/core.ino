@@ -93,7 +93,7 @@ void initInterrupt() {
 }
 
 /* External interrupt for hot water  */
-void hotInterrupt() {
+ICACHE_RAM_ATTR void hotInterrupt() {
   /* First interrupt if hotInt == 0  */
   if (hotInt == 0) {    
     hotInt++;
@@ -103,7 +103,7 @@ void hotInterrupt() {
 }
 
 /* External interrupt for cold water */
-void coldInterrupt() {
+ICACHE_RAM_ATTR void coldInterrupt() {
   /* First interrupt if coldInt == 0 */
   if (coldInt == 0) {
     coldInt++;

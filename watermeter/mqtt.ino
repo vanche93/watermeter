@@ -6,70 +6,8 @@ void createMqttTopic() {
 
   s +=  "/" + mac + "/";
   
-  mqttTopicHotIn = s + END_TOPIC_HOT_IN;
-  mqttTopicColdIn = s + END_TOPIC_COLD_IN;
   mqttTopicHotOut = s + END_TOPIC_HOT_OUT;
   mqttTopicColdOut = s + END_TOPIC_COLD_OUT;
-}
-
-
-void callback(char *topic, byte *payload, unsigned int len) {
-  // handle message arrived
-
-  time_t timeFromServer;
-  unsigned long waterFromServer;
-  unsigned int pos;
-
-  String s = "";
-  String msg = "";
-  String snew = "NEW";
-  String stopic = topic;
-  
-  
-  
-  for (unsigned int i = 0; i < len; i++) {
-    msg += (char)payload[i];
-  }
-
-  pos = msg.indexOf(' ');
-  s = msg.substring(0, pos);
-  timeFromServer = strtoul(s.c_str(), 0, 10);
-  s = msg.substring(pos);
-  waterFromServer = strtoul(s.c_str(), 0, 10);
-
-  if (DEBUG) {
-    Serial.print(msg);
-    Serial.print(" => ");
-    Serial.println(topic);
-  }
-  
-  if (stopic.compareTo(mqttTopicHotIn) == 0) {
-    if (msg.endsWith(snew)) {
-      if (waterFromServer > wmConfig.hotWater)
-      wmConfig.hotWater = waterFromServer;
-      wmConfig.hotTime = timeFromServer;
-      saveNewConfig = true;
-    } else if (waterFromServer > wmConfig.hotWater) {
-      wmConfig.hotWater = waterFromServer + wmConfig.litersPerPulse;
-      wmConfig.hotTime = timeFromServer;
-      saveNewConfig = true;
-    }
-  } else if (stopic.compareTo(mqttTopicColdIn) == 0) {
-    if (msg.endsWith(snew)) {
-      wmConfig.coldWater = waterFromServer;
-      wmConfig.coldTime = timeFromServer;
-      saveNewConfig = true;
-    } else if (waterFromServer > wmConfig.coldWater) {
-      wmConfig.coldWater = waterFromServer + wmConfig.litersPerPulse;
-      wmConfig.coldTime = timeFromServer;
-      saveNewConfig = true;
-    }
-  }
-  
-  if (saveNewConfig) {
-    saveNewConfig = false;
-    saveConfig();
-  }
 }
 
 
@@ -81,9 +19,7 @@ void mqttReconnect() {
 
   if (mqttFirstStart) {
     Serial.printf("Full name out topic for hot water: %s\n", mqttTopicHotOut.c_str());
-    Serial.printf("Full name in topic for hot water: %s\n", mqttTopicHotIn.c_str());
     Serial.printf("Full name out topic for cold water: %s\n", mqttTopicColdOut.c_str());
-    Serial.printf("Full name in topic for cold water: %s\n", mqttTopicColdIn.c_str());
     mqttFirstStart = false;
   }
   
@@ -97,9 +33,6 @@ void mqttReconnect() {
     if (DEBUG) Serial.printf("Connecting to MQTT server: %s\n", wmConfig.mqttBroker);
     if (mqttClient.connect(mqttClientId.c_str(), wmConfig.mqttUser, wmConfig.mqttPassword)) {
       if (DEBUG) Serial.printf("Connected to MQTT server: %s\n", wmConfig.mqttBroker);
-      mqttClient.setCallback(callback);
-      mqttClient.subscribe(mqttTopicHotIn.c_str());
-      mqttClient.subscribe(mqttTopicColdIn.c_str());
       mqttRestart = false;
     } else {
       mqttRestart = true;

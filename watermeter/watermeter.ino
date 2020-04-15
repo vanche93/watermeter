@@ -79,18 +79,14 @@ WiFiClient wifiClient;
 
 /* For MQTT */
 #define MQTT_PORT 1883
-#define END_TOPIC_HOT_IN "HotWater" DELIM "In"
-#define END_TOPIC_COLD_IN "ColdWater" DELIM "In"
-#define END_TOPIC_HOT_OUT "HotWater" DELIM "Out"
-#define END_TOPIC_COLD_OUT "ColdWater" DELIM "Out"
+#define END_TOPIC_HOT_OUT "HotWater"
+#define END_TOPIC_COLD_OUT "ColdWater"
 PubSubClient mqttClient(wifiClient);
 String mqttClientId;                      /* "MODULE_NAME-MacAddress"                                    */
-String mqttTopicHotOut, mqttTopicColdOut, mqttTopicHotIn, mqttTopicColdIn;
+String mqttTopicHotOut, mqttTopicColdOut;
                                           /* Full name Topic -                                           *
-                                           *  mqttTopicHotOut  - "MQTT_TOPIC/MacAddress/HotWater/Out"    *
-                                           *  mqttTopicColdOut - "MQTT_TOPIC/MacAddress/ColdWater/Out"   *
-                                           *  mqttTopicHotIn   - "MQTT_TOPIC/MacAddress/HotWater/In"     *
-                                           *  mqttTopicColdIn  - "MQTT_TOPIC/MacAddress/ColdWater/In"    *
+                                           *  mqttTopicHotOut  - "MQTT_TOPIC/MacAddress/HotWater"    *
+                                           *  mqttTopicColdOut - "MQTT_TOPIC/MacAddress/ColdWater"   *
                                            *  see mqtt.ino                                               */
 
 
@@ -182,14 +178,13 @@ void loop () {
   if (counterHotWater > 0) {
     wmConfig.hotTime = localTimeT();
     s = "";
-    s += wmConfig.hotTime;
     wmConfig.hotWater += counterHotWater * wmConfig.litersPerPulse;
-    s = s + " " + wmConfig.hotWater;
+    s += wmConfig.hotWater;
     if (DEBUG) {
       Serial.print(mqttTopicHotOut + " <== "); Serial.println(s);
     }
     if (mqttClient.connected()) mqttClient.publish(mqttTopicHotOut.c_str(),s.c_str());
-    else saveConfig();
+    saveConfig();
     counterHotWater = 0;
   }
 
@@ -197,14 +192,13 @@ void loop () {
   if (counterColdWater > 0) {
     wmConfig.coldTime = localTimeT();
     s = "";
-    s += wmConfig.coldTime;
     wmConfig.coldWater += counterColdWater * wmConfig.litersPerPulse;
-    s = s + " " + wmConfig.coldWater;
+    s += wmConfig.coldWater;
     if (DEBUG) {
       Serial.print(mqttTopicColdOut + " <== "); Serial.println(s);
     }
     if (mqttClient.connected()) mqttClient.publish(mqttTopicColdOut.c_str(),s.c_str());
-    else saveConfig();
+    saveConfig();
     counterColdWater = 0;
   }
 
@@ -220,8 +214,7 @@ void loop () {
   if (subsHotWater) {
     subsHotWater = false;
     s = "";
-    s += wmConfig.hotTime;
-    s = s + " " + wmConfig.hotWater + " NEW";
+    s += wmConfig.hotWater;
       
     if (DEBUG) Serial.printf("%s <== %s\n", mqttTopicHotOut.c_str(), s.c_str());
     
@@ -232,8 +225,7 @@ void loop () {
   if (subsColdWater) {
     subsColdWater = false;
     s = "";
-    s += wmConfig.coldTime;
-    s = s + " " + wmConfig.coldWater + " NEW";
+    s += wmConfig.coldWater;
     
     if (DEBUG) Serial.printf("%s <== %s\n", mqttTopicColdOut.c_str(), s.c_str());
 

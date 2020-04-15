@@ -12,7 +12,7 @@ extern "C" {
 }
 
 #define DEBUG true                                /* Send debug messages if true          */
-#define EXT_POWER_CONTROL true                    /* Check external power if true         */
+#define EXT_POWER_CONTROL false                    /* Check external power if true         */
 #define SLEEP_MODE_ON true                        /* To pass into sleep mode if true      */
 #define NOT_READ_EEPROM false                     /* Dont't read from EEPROM if true      */
 

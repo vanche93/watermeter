@@ -39,7 +39,7 @@ extern "C" {
 /* For config (default settings) */
 #define WEB_ADMIN_LOGIN "Admin"                  /* Login for web Auth                */
 #define WEB_ADMIN_PASSWORD "1111"                /* Password for web Auth             */
-#define AP_SSID "WaterMeter_" MODULE_VERSION     /* Name WiFi AP Mode                 */
+#define AP_SSID "WaterMeter"                     /* Name WiFi AP Mode                 */
 #define AP_PASSWORD "12345678"                   /* Password WiFi AP Mode             */
 #define MQTT_USER "test"                         /* mqtt user                         */
 #define MQTT_PASSWORD "1111"                     /* mqtt password                     */

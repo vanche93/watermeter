@@ -151,6 +151,7 @@ typedef struct config {
 _config wmConfig;
 
 unsigned long mqttReconnectLastTime = 0;
+unsigned long mqttPublishLastTime = 0;
 unsigned long staReconnectLastTime = 0;
 unsigned long ntpReconnectLastTime = 0;
 volatile unsigned long hotTimeBounce, coldTimeBounce;
@@ -231,6 +232,19 @@ void loop () {
 
     if (mqttClient.connected()) mqttClient.publish(mqttTopicColdOut.c_str(),s.c_str());
   }
+
+  /* publish to mqtt server on start and once in 300 sec */
+  if (mqttPublishLastTime == 0 || millis() - mqttPublishLastTime > 300000) {
+    if (mqttClient.connected()) {
+      s = "";
+      s += wmConfig.coldWater;
+      mqttClient.publish(mqttTopicColdOut.c_str(),s.c_str());
+      s = "";
+      s += wmConfig.hotWater;
+      mqttClient.publish(mqttTopicHotOut.c_str(),s.c_str());
+      mqttPublishLastTime = millis();
+    }
+  }
   
   if (mqttClient.connected()) mqttClient.loop();
   else mqttRestart = true;
@@ -291,5 +305,3 @@ void loop () {
 
   yield();
 }
-
-

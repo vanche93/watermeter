@@ -38,15 +38,9 @@ String returnVccStr() {
   int volt;
   int voltInt;
   
-  if (!EXT_POWER_CONTROL) {
-    Vcc = "Vcc: ";
-    voltInt = ESP.getVcc();
-    volt = (voltInt*117+5000)/100;
-  } else {
-    Vcc = "Battery: ";
-    voltInt = analogRead(BAT_VOLT_PIN);
-    volt = 5000/1024*voltInt*1.19;
-  }
+  Vcc = "Vcc: ";
+  voltInt = ESP.getVcc();
+  volt = (voltInt*117+5000)/100;
 /*  Serial.printf("voltInt: %d\n", voltInt);*/
   
     v += volt;
@@ -68,13 +62,24 @@ String returnRssiStr() {
   return rssi;
 }
 
+String returnColdCircuitStr() {
+  String c = "Cold circuit: ";
+  if (coldState == LOW) c += "closed";
+  else c+= "open";
+  return c;
+}
+
+String returnHotCircuitStr() {
+  String c = "Hot circuit: ";
+  if (hotState == LOW) c += "closed";
+  else c+= "open";
+  return c;
+}
+
 /* Init PIN */
 void initPin() {
   pinMode(HOT_PIN, INPUT_PULLUP);
   pinMode(COLD_PIN, INPUT_PULLUP);
-  if (EXT_POWER_CONTROL) {
-    pinMode(EXT_POWER_PIN, INPUT_PULLDOWN_16);
-  }
   
 }
 
@@ -86,116 +91,106 @@ void startApMsg() {
 /* Init external interrupt           */
 void initInterrupt() {
   
-  attachInterrupt(digitalPinToInterrupt(HOT_PIN), hotInterrupt, RISING);
-  attachInterrupt(digitalPinToInterrupt(COLD_PIN), coldInterrupt, RISING);
+  attachInterrupt(digitalPinToInterrupt(HOT_PIN), hotInterrupt, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(COLD_PIN), coldInterrupt, CHANGE);
 
   hotInt = coldInt = 0;
+  hotState = digitalRead(HOT_PIN);
+  coldState = digitalRead(COLD_PIN);
 }
 
 /* External interrupt for hot water  */
 ICACHE_RAM_ATTR void hotInterrupt() {
-  /* First interrupt if hotInt == 0  */
-  if (hotInt == 0) {    
-    hotInt++;
-    hotTimeBounce = millis();
-  } else os_timer_disarm(&hotTimer);
-  os_timer_arm(&hotTimer, TIME_BOUNCE, true);
+  if (hotState == LOW) {
+    if (digitalRead(HOT_PIN)) {
+      /* First interrupt if hotInt == 0  */
+      if (hotInt == 0) {    
+        hotInt++;
+        hotTimeBounce = millis();
+      } else os_timer_disarm(&hotTimer);
+      os_timer_arm(&hotTimer, TIME_BOUNCE, true); 
+    }
+  } else {
+    if (!digitalRead(HOT_PIN)) {
+      /* First interrupt if hotInt == 0  */
+      if (hotInt == 0) {    
+        hotInt++;
+        hotTimeBounce = millis();
+      } else os_timer_disarm(&hotTimer);
+      os_timer_arm(&hotTimer, TIME_BOUNCE, true); 
+    }
+  }
 }
 
 /* External interrupt for cold water */
 ICACHE_RAM_ATTR void coldInterrupt() {
-  /* First interrupt if coldInt == 0 */
-  if (coldInt == 0) {
-    coldInt++;
-    coldTimeBounce = millis();
-  } else os_timer_disarm(&coldTimer);
-  os_timer_arm(&coldTimer, TIME_BOUNCE, true);
+  if (coldState == LOW) {
+    if (digitalRead(COLD_PIN)) {
+      /* First interrupt if coldInt == 0  */
+      if (coldInt == 0) {    
+        coldInt++;
+        coldTimeBounce = millis();
+      } else os_timer_disarm(&coldTimer);
+      os_timer_arm(&coldTimer, TIME_BOUNCE, true); 
+    }
+  } else {
+    if (!digitalRead(COLD_PIN)) {
+      /* First interrupt if coldInt == 0  */
+      if (coldInt == 0) {    
+        coldInt++;
+        coldTimeBounce = millis();
+      } else os_timer_disarm(&coldTimer);
+      os_timer_arm(&coldTimer, TIME_BOUNCE, true); 
+    }
+  }
 }
 
 void hotTimerCallback(void *pArg) {
-  /* If a long low level, then retiming hotTimeBounce */
-  if (!digitalRead(HOT_PIN)) {
-    hotTimeBounce = millis();
-    return;
+  if (hotState == LOW) {
+    if (!digitalRead(HOT_PIN)) {
+      os_timer_disarm(&hotTimer);
+      hotInt = 0;
+      return;
+    }
+    if (digitalRead(HOT_PIN) && millis() - hotTimeBounce < TIME_BOUNCE) return;
+    os_timer_disarm(&hotTimer);
+    hotInt = 0;
+    counterHotWater++;
+    hotState = HIGH;
+  } else {
+    if (digitalRead(HOT_PIN)) {
+      os_timer_disarm(&hotTimer);
+      hotInt = 0;
+      return;
+    }
+    if (!digitalRead(HOT_PIN) && millis() - hotTimeBounce < TIME_BOUNCE) return;
+    os_timer_disarm(&hotTimer);
+    hotInt = 0;
+    hotState = LOW;
   }
-
-  if (digitalRead(HOT_PIN) && millis() - hotTimeBounce < TIME_BOUNCE) return;
-  
-  os_timer_disarm(&hotTimer);
-
-  hotInt = 0;
-
-  counterHotWater++;  
 }
 
 void coldTimerCallback(void *pArg) {
-  
-  if (!digitalRead(COLD_PIN)) {
-    coldTimeBounce = millis();
-    return;
-  }
-
-  if (digitalRead(COLD_PIN) && millis() - coldTimeBounce < TIME_BOUNCE) return;
-  
-  os_timer_disarm(&coldTimer);
-
-  coldInt = 0;
-
-  counterColdWater++;  
-}
-
-bool checkExtPower() {
-
-  if (!EXT_POWER_CONTROL) return true;
-
-  int val = digitalRead(EXT_POWER_PIN);
-
-  if (val) {
-    powerLow = false;
-    sleepDelay = 0;
-    if (sleepNow) {
-      if (DEBUG) Serial.println("External power high.");  
-      sleepNow = false;
+  if (coldState == LOW) {
+    if (!digitalRead(COLD_PIN)) {
+      os_timer_disarm(&coldTimer);
+      coldInt = 0;
+      return;
     }
-    return true;
-  }
-  else {
-    powerLow = true;
-    delay(1);
-    if (!sleepNow) {
-      if (sleepDelay > SLEEP_DELAY) {
-        if (DEBUG) Serial.println("External power low.");
-        sleepNow = true;
-        sleepDelay = 0;
-        return false;
-      } else {
-        sleepDelay++;
-      }
+    if (digitalRead(COLD_PIN) && millis() - coldTimeBounce < TIME_BOUNCE) return;
+    os_timer_disarm(&coldTimer);
+    coldInt = 0;
+    counterColdWater++;
+    coldState = HIGH;
+  } else {
+    if (digitalRead(COLD_PIN)) {
+      os_timer_disarm(&coldTimer);
+      coldInt = 0;
+      return;
     }
-    return false;
+    if (!digitalRead(COLD_PIN) && millis() - coldTimeBounce < TIME_BOUNCE) return;
+    os_timer_disarm(&coldTimer);
+    coldInt = 0;
+    coldState = LOW;
   }
 }
-
-void sleepOnNow() {
-  if (DEBUG) Serial.println("Light sleep now ...");
-  apModeNow=staModeNow=false;
-  wifi_station_disconnect();
-  wifi_set_opmode(NULL_MODE);
-  wifi_fpm_set_sleep_type(LIGHT_SLEEP_T); //light sleep mode
-  gpio_pin_wakeup_enable(GPIO_ID_PIN(HOT_PIN), GPIO_PIN_INTR_LOLEVEL);  /* Set the interrupt to look for LOW pulses on HOT_PIN  */
-  gpio_pin_wakeup_enable(GPIO_ID_PIN(COLD_PIN), GPIO_PIN_INTR_LOLEVEL); /* Set the interrupt to look for LOW pulses on COLD_PIN */
-  wifi_fpm_open();
-  delay(100);
-  wifi_fpm_set_wakeup_cb(wakeupFromMotion); //wakeup callback
-  wifi_fpm_do_sleep(0xFFFFFFF); 
-  delay(100);
-}
-
-void wakeupFromMotion(void) {
-  ESP.wdtFeed();
-  initInterrupt();
-  wifi_fpm_close();
-  if (DEBUG) Serial.println("Wake up from sleep.");
-  sleepNow = false; 
-}
-

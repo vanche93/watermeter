@@ -12,21 +12,17 @@ extern "C" {
 }
 
 #define DEBUG true                                /* Send debug messages if true          */
-#define EXT_POWER_CONTROL false                    /* Check external power if true         */
-#define SLEEP_MODE_ON true                        /* To pass into sleep mode if true      */
 #define NOT_READ_EEPROM false                     /* Dont't read from EEPROM if true      */
 
 #define SD_PIN D4                                 /* microSD use D4 for Wemos D1 Mini     */
 #define HOT_PIN D1                                /* Pin of hot water                     */
 #define COLD_PIN D2                               /* Pin of cold water                    */
-#define EXT_POWER_PIN D0                          /* Pin of monitoring external power     */
-#define BAT_VOLT_PIN A0                           /* Pin of measuring the battery voltage */
 
-#define TIME_BOUNCE 50                            /* Timeout for debounce in msec         */
+#define TIME_BOUNCE 250                           /* Timeout for debounce in msec         */
 
 /* Name and Version */
 #define PLATFORM "Wemos D1 mini & Micro SD"
-#define MODULE_VERSION "v2.1.2"
+#define MODULE_VERSION "v2.2"
 #define MODULE_NAME "WaterMeter " MODULE_VERSION
 #define WEB_WATERMETER_FIRST_NAME "Water"
 #define WEB_WATERMETER_LAST_NAME "Meter"
@@ -98,8 +94,6 @@ ESP8266WebServer webServer(80);
 /* Flags */
 bool rebootNow = false;
 bool restartWiFi = false;
-bool sleepNow = false;
-bool powerLow = false;
 bool apModeNow = true;
 bool staModeNow = false;
 bool staConfigure = false;
@@ -112,10 +106,6 @@ bool mqttFirstStart = true;
 bool subsHotWater = false;
 bool subsColdWater = false;
 bool firstNTP = true;
-
-/* Delay before sleep ~500msec if external power is off */
-#define SLEEP_DELAY 500
-int sleepDelay = 0;
 
 /* Counter of water for interrupts */
 volatile unsigned long counterHotWater, counterColdWater;
@@ -158,22 +148,14 @@ volatile unsigned long hotTimeBounce, coldTimeBounce;
 time_t timeStart;
 
 volatile int hotInt, coldInt;
+volatile int hotState, coldState;
 
 
-/* If EXT_POWER_CONTROL is false and pin A0 should be not connected to anything */
-#if (!EXT_POWER_CONTROL)
 ADC_MODE (ADC_VCC);
-#endif
 
 
 void loop () {
   String s;
-
-  checkExtPower();
-
-  if (sleepNow && SLEEP_MODE_ON) {
-   sleepOnNow();
-  }
   
   /* If counter of hot water was added */
   if (counterHotWater > 0) {
@@ -259,12 +241,12 @@ void loop () {
     mqttReconnectLastTime = millis();
   }
 
-  if (!sleepNow && !powerLow && wmConfig.apMode && !apModeNow && !staModeNow) {
+  if (wmConfig.apMode && !apModeNow && !staModeNow) {
     startWiFiAP();
   }
 
   /* checking connect to WiFi network once in 30 sec */
-  if (!sleepNow && !powerLow && !wmConfig.apMode && staConfigure && millis() - staReconnectLastTime > 30000 && 
+  if (!wmConfig.apMode && staConfigure && millis() - staReconnectLastTime > 30000 && 
          ((apModeNow || (staModeNow && WiFi.status() != WL_CONNECTED)) || (!apModeNow && !staModeNow))) {
     staReconnectLastTime = millis();
     if (DEBUG) Serial.printf("Check WiFi network: %s\n", wmConfig.staSsid);

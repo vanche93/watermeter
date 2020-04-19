@@ -26,28 +26,15 @@ void setup() {
     }
   }
 
-  if (SLEEP_MODE_ON) {
-    if (!checkExtPower()) {
-      while (sleepDelay <= SLEEP_DELAY) {
-        checkExtPower();
-      }
-      checkExtPower();
-    }
-  }
-
   if (firstStart || wmConfig.apMode || wmConfig.staSsid[0] == '0') {
-    if (!sleepNow) {
-      startWiFiAP();            /* wifi.ino   */
-      delay(1000);
-      startApMsg();             /* core.ino   */
-    }
+    startWiFiAP();            /* wifi.ino   */
+    delay(1000);
+    startApMsg();             /* core.ino   */
   } else {
-    if (!sleepNow) {
-      if (!startWiFiSTA()) {    /* wifi.ino   */
-        Serial.println("No WiFi connect STA mode. Start AP mode");
-        delay(500);
-        startWiFiAP();          /* wifi.ino   */
-      }
+    if (!startWiFiSTA()) {    /* wifi.ino   */
+      Serial.println("No WiFi connect STA mode. Start AP mode");
+      delay(500);
+      startWiFiAP();          /* wifi.ino   */
     }
   }
 
@@ -62,7 +49,3 @@ void setup() {
 
 
 }
-
-
-
-

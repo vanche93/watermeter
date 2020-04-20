@@ -7,17 +7,17 @@ You may use an MQTT server to integrate into a home automation software.
 
 
 # Hardware.
-A mini wifi board with 4MB flash based on ESP-8266EX - Wemos D1 mini https://wiki.wemos.cc/products:d1:d1_mini
+A mini wifi board with 4MB flash based on ESP-8266EX - Wemos D1 mini https://www.wemos.cc/en/latest/d1/d1_mini.html
 
-Micro SD Card Shield for Wemos D1 mini - https://wiki.wemos.cc/products:d1_mini_shields:micro_sd_card_shield
+Micro SD Card Shield for Wemos D1 mini - https://www.wemos.cc/en/latest/d1_mini_shiled/micro_sd.html
 
 Added software debounce
 
 Optional:
 
-Lithium (LiPo) Battery shield, charging & boost for Wemos D1 mini - https://wiki.wemos.cc/products:d1_mini_shields:battery_shield
+Lithium (LiPo) Battery shield, charging & boost for Wemos D1 mini - https://www.wemos.cc/en/latest/d1_mini_shiled/battery.html
 
-A triple(x3) Base for Wemos D1 mini - https://wiki.wemos.cc/products:d1_mini_shields:tripler_base
+A triple(x3) Base for Wemos D1 mini - https://www.wemos.cc/en/latest/d1_mini_shiled/tripler_base.html
 
 Resistor 12kOm 0.125W for Battery shield (for external power control, see https://github.com/slacky1965/watermeter/blob/master/doc/images/Wemos1.jpg)
 

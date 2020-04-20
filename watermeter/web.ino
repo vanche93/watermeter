@@ -316,12 +316,6 @@ String htmlLogo() {
   s += "<p>Uptime: ";
   s += localUptime();
   s += "</p>\r\n";
-  s += "<p>";
-  s += returnColdCircuitStr();
-  s += "</p>\r\n";
-  s += "<p>";
-  s += returnHotCircuitStr();
-  s += "</p>\r\n";
   s += "<p>" + returnVccStr() + ". " + returnRssiStr() + "</p>";
   s += "<p>Local time: ";
   s += localTimeStr();

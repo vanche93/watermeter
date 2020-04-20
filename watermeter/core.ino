@@ -62,20 +62,6 @@ String returnRssiStr() {
   return rssi;
 }
 
-String returnColdCircuitStr() {
-  String c = "Cold circuit: ";
-  if (coldState == LOW) c += "closed";
-  else c+= "open";
-  return c;
-}
-
-String returnHotCircuitStr() {
-  String c = "Hot circuit: ";
-  if (hotState == LOW) c += "closed";
-  else c+= "open";
-  return c;
-}
-
 /* Init PIN */
 void initPin() {
   pinMode(HOT_PIN, INPUT_PULLUP);

@@ -55,6 +55,8 @@ void initWebServer (void) {
   webServer.on("/", handleRoot);
   /* Set "/config" URL and handleConfig func */
   webServer.on("/config", handleConfig);
+  /* Set "/metrics" URL and handlePrometheus func */
+  webServer.on("/metrics", handlePrometheus);
   /* Set handleNotFound func                 */
   webServer.onNotFound(handleNotFound);
 
@@ -785,6 +787,27 @@ void parssingSettings() {
     delay(2000);
     ESP.reset();
   }
+}
+
+
+void handlePrometheus(){
+
+  String s;
+  
+  s = "# HELP watermeter\n";
+  s += "# TYPE watermeter counter\n";
+  s += "watermeter_liters{name=\"cold\",location=\"";
+  s += LOCATION;
+  s += "\"} ";
+  s += wmConfig.coldWater;
+  s += " \n";
+  s += "watermeter_liters{name=\"hot\",location=\"";
+  s += LOCATION;
+  s += "\"} ";
+  s += wmConfig.hotWater;
+
+  webServer.send(200, "text/html", s);
+
 }
 
 void handleNotFound(){

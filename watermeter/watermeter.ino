@@ -27,6 +27,9 @@ extern "C" {
 #define WEB_WATERMETER_FIRST_NAME "Water"
 #define WEB_WATERMETER_LAST_NAME "Meter"
 
+/* For Prometheus Location Setting*/
+#define LOCATION "Bathroom"                         /* counter location name          */
+
 /* Directory and name of config files for SD card */
 #define DELIM "/"
 #define WM_DIR DELIM "wmeter"                    /* Drirectory for config file        - "/wmeter"             */
